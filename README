@@ -1,0 +1,5 @@
+This is a little text adventure library for Ruby. It's very simple at the moment.
+
+I've tried to focus on making a nice DSL for it as much as possible, because I'm interested in learning that angle of Ruby. I'm not sure that some of the tricks I've used are a good idea, because they don't seem very maintainable to me, but they were fun to learn.
+
+MIT Licence n' that.
