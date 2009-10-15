@@ -2,4 +2,6 @@ This is a little text adventure library for Ruby. It's very simple at the moment
 
 I've tried to focus on making a nice DSL for it as much as possible, because I'm interested in learning that angle of Ruby. I'm not sure that some of the tricks I've used are a good idea, because they don't seem very maintainable to me, but they were fun to learn.
 
+To make a new item you define a class, but to make a room you instantiate one. That might seem a little odd, but it makes some sense - you can have many stones, which are the same (more or less, anyway) but every room is unique. If you have made a game in which many locations are the same, you have made a boring game.
+
 MIT Licence n' that.
