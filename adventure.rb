@@ -1,10 +1,10 @@
 require 'rubygems'
 require 'metaid'
 # TODO locked doors
-# TODO inventory/items
 # TODO enemies
 # TODO NPCs.
 # TODO skills/levels/experience
+# Is it possible to extend location?
 
 class Item
   def initialize
@@ -14,6 +14,10 @@ class Item
 
   def describe
     @description
+  end
+
+  def use
+    false
   end
 
   attr_reader :name
@@ -98,6 +102,10 @@ class Location
     end
   end
 
+  def add_exit!(args)
+    @exits[args[:direction]] = Exit.new(args[:description], args[:target])
+  end
+
   def to_s
     "#{@name} - #{@desc} - #{@exits.keys}"
   end
@@ -132,27 +140,25 @@ class Location
     description
   end
 
-  def take(item_name)
-    collected_item = @inventory.find {|item| item.name == item_name}
+  def take(item)
+    collected_item = item
+    if item.class != Item
+      collected_item = @inventory.find {|inventory_item| inventory_item.name == item}
+    end
     if collected_item
       @inventory.delete(collected_item)
     end
     collected_item
   end
-end
 
-class Item
-  def initialize(name, description)
-    @name = name
-    @description = description
-  end
+  attr_reader :inventory
 end
 
 class Player
   def initialize()
     @current_location = nil
     @inventory = []
-    @actions = [:look, :move, :get]
+    @actions = [:look, :move, :get, :use]
   end
 
   def teleport(location)
@@ -160,11 +166,20 @@ class Player
     @current_location = location
   end
 
+  def get!(item_name)
+    if collected_item = @current_location.take(item_name)
+      puts "You picked up the #{collected_item.name}"
+      @inventory << collected_item
+    else
+      puts "I cannot see a #{item_name}"
+    end
+  end
+
   def look
     puts @current_location.describe
   end
 
-  def move(direction)
+  def move!(direction)
     if @current_location.exits[direction.to_sym]
       @current_location = Location.get(@current_location.exits[direction.to_sym].target)
       if Game.hook @current_location, :on_entrance
@@ -175,25 +190,40 @@ class Player
     end
   end
 
-  def get(item_name)
-    if collected_item = @current_location.take(item_name)
-      puts "You picked up the #{collected_item.name}"
+  def owns?(item_name)
+    @inventory.find {|item| item.name == item_name}
+  end
+
+  def use!(item_name)
+    if item = owns?(item_name)
+        if !item.use
+          @current_location.inventory.each do |location_item|
+            if item.use_on(location_item)
+              look
+              return
+            end
+          end
+        end
     else
-      puts "I cannot see a #{item_name}"
+      puts "You do not have a #{item_name}"
     end
   end
 
   def act(command)
     command = command.split(/\s/)
     case command[0]
-    when /^l/
-      look
-    when /^m/
-      move command[1]
-    when /^g/
-      get command[1]
-    else
-      puts "I do not understand the command '#{command[0]}'"
+      when /^l/
+        look
+      when /^m/
+        move! command[1]
+      when /^g/
+        get! command[1]
+      when /^u/
+        use! command[1]
+      when /^help/
+        puts @actions
+      else
+        puts "I do not understand the command '#{command[0]}'"
     end
   end
 end
